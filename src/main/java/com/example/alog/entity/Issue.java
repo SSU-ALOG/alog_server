@@ -58,6 +58,66 @@ public class Issue {
         this.addr = addr;
     }
 
+    // @PrePersist 사용하여 엔티티 저장 전 date 필드 자동 설정
+    @PrePersist
+    protected void onCreate() {
+        this.date = LocalDateTime.now();
+    }
+
     // Getter와 Setter 추가
-    // ...
+    public Long getId() {
+        return issueId;
+    }
+
+    public void setId(Long id) {
+        this.issueId = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public BigDecimal getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(BigDecimal latitude) {
+        this.latitude = latitude;
+    }
+
+    public BigDecimal getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(BigDecimal longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getAddr() {
+        return addr;
+    }
+
+    public void setAddr(String addr) {
+        this.addr = addr;
+    }
 }
