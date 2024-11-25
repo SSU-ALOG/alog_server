@@ -3,7 +3,6 @@
 package com.example.alog.service;
 
 import com.example.alog.entity.Issue;
-import com.example.alog.repository.IssueRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
