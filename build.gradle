@@ -26,6 +26,11 @@ dependencies {
     // JPA 및 MySQL 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'mysql:mysql-connector-java:8.0.29' // 명시적인 버전 추가
+
+    implementation 'org.seleniumhq.selenium:selenium-java:4.5.0'
+    implementation 'org.jsoup:jsoup:1.15.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
 tasks.named('test') {
