@@ -50,7 +50,7 @@ public class WebCrawlerService {
         try {
             // 최근 크롤링 시간 가져오기
             Optional<IssueMetaData> metadata = metaDataRepository.findById(Long.valueOf(1));
-            String lastCrawlTime = String.valueOf(metadata.get().getDatetime()); // 최근 크롤링 시간
+            String lastCrawlTime = String.valueOf(metadata.get().getDatetime());
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
             // 대상 페이지 접속
@@ -84,6 +84,7 @@ public class WebCrawlerService {
                 // 다음 페이지 버튼 확인 및 이동
                 WebElement nextButton = driver.findElement(By.cssSelector("#content > div.tabContent_boxWrap > div.boardList_boxWrap > div > div > a:nth-child(3)"));
                 if (nextButton.getAttribute("class").contains("disabled")) {
+                    System.out.println("페이지 이동 종료");
                     break; // 다음 페이지가 없으면 종료
                 } else {
                     nextButton.click();
