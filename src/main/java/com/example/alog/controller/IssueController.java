@@ -8,12 +8,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/issues")
 public class IssueController {
 
     @Autowired
     private IssueService issueService;
+
+    public IssueController(IssueService issueService){
+        this.issueService = issueService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<?> createIssue(@RequestBody Issue issue) {
@@ -23,5 +29,9 @@ public class IssueController {
 
         Issue savedIssue = issueService.saveIssue(issue);
         return ResponseEntity.ok(savedIssue);
+    }
+    @GetMapping("/recent")
+    public ResponseEntity<List<Issue>> getRecentIssues() {
+        return ResponseEntity.ok(issueService.getIssuesWithinAWeek());
     }
 }
