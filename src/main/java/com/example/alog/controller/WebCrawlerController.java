@@ -16,8 +16,8 @@ public class WebCrawlerController {
         this.webCrawlerService = webCrawlerService;
     }
 
-//    @GetMapping("/crawl-table")
-//    public List<String> crawlTable() throws IOException {
-//        return webCrawlerService.fetchTableData();
-//    }
+    @GetMapping("/crawl-table")
+    public List<String> crawlTable() throws IOException {
+        return webCrawlerService.fetchTableData();
+    }
 }
