@@ -3,8 +3,10 @@ package com.example.alog.entity;
 import jakarta.persistence.Table;
 
 import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "issue")
@@ -13,6 +15,7 @@ public class Issue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "issue_id", nullable = false, unique = true)
+    @JsonProperty("issueId")
     private Long issueId;
 
     @Column(nullable = false, length = 255)
@@ -34,34 +37,43 @@ public class Issue {
     private LocalDateTime date;
 
     @Column(nullable = false, length = 255)
-    private String status = "진행중";
+    private String status;
 
     @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
-    private Boolean verified = false;
+    private Boolean verified;
 
     @Column(nullable = false, length = 255)
     private String addr;
 
     // 기본 생성자
-    public Issue() {}
+    public Issue() {
+    }
 
     // 생성자
     public Issue(String title, String category, String description, BigDecimal latitude, BigDecimal longitude, String addr) {
         this.title = title;
-        this.category = category != null ? category : "기타";
+        this.category = category;
         this.description = description;
         this.latitude = latitude;
         this.longitude = longitude;
-        this.date = LocalDateTime.now();
-        this.status = "진행중";
-        this.verified = false;
         this.addr = addr;
     }
 
-    // @PrePersist 사용하여 엔티티 저장 전 date 필드 자동 설정
+    // @PrePersist 사용하여 기본값 설정
     @PrePersist
     protected void onCreate() {
-        this.date = LocalDateTime.now();
+        if (this.category == null) {
+            this.category = "기타";
+        }
+        if (this.status == null) {
+            this.status = "진행중";
+        }
+        if (this.verified == null) {
+            this.verified = false;
+        }
+        if (this.date == null) {
+            this.date = LocalDateTime.now();
+        }
     }
 
     // Getter와 Setter 추가
@@ -111,6 +123,30 @@ public class Issue {
 
     public void setLongitude(BigDecimal longitude) {
         this.longitude = longitude;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Boolean getVerified() {
+        return verified;
+    }
+
+    public void setVerified(Boolean verified) {
+        this.verified = verified;
     }
 
     public String getAddr() {
