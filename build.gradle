@@ -31,6 +31,9 @@ dependencies {
     // 크롤링
     implementation 'org.seleniumhq.selenium:selenium-java:4.5.0'
     implementation 'org.jsoup:jsoup:1.15.4'
+
+    // 웹소켓
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
 }
 
 tasks.named('test') {

@@ -6,6 +6,7 @@ import com.example.alog.entity.Issue;
 import com.example.alog.service.IssueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +17,9 @@ public class IssueController {
 
     @Autowired
     private IssueService issueService;
+
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
 
     public IssueController(IssueService issueService){
         this.issueService = issueService;
@@ -28,8 +32,10 @@ public class IssueController {
         }
 
         Issue savedIssue = issueService.saveIssue(issue);
+        messagingTemplate.convertAndSend("/topic/newData", issue);
         return ResponseEntity.ok(savedIssue);
     }
+
     @GetMapping("/recent")
     public ResponseEntity<List<Issue>> getRecentIssues() {
         return ResponseEntity.ok(issueService.getIssuesWithinAWeek());

@@ -117,56 +117,48 @@ public class WebCrawlerService {
 
                 while (true) {
                     try {
-                        // 현재 페이지 데이터 행 대기
-//                        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("#apiTr > tr[id*='_apiData1']")));
-
-//                        List<WebElement> rows = driver.findElements(By.cssSelector("#apiTr > tr[id*='_apiData1']"));
-
+                        // 데이터 가져오기
                         apiTrElement = driver.findElement(By.cssSelector("#apiTr"));
                         List<WebElement> rows = apiTrElement.findElements(By.cssSelector("tr[id*='_apiData1']"));
                         int rowCount = rows.size();
 
                         System.out.println("rowCount: " + rowCount);
 
-                        rowCount = 0;
-                        for (int i = 0; i < rowCount; i++) {
-                            while (true) {
-                                try {
-                                    // 행 데이터 및 id 값 가져오기
-//                                    WebElement row = driver.findElements(By.cssSelector("#apiTr > tr[id*='_apiData1']")).get(i);
-                                    WebElement row = rows.get(i);
-                                    String rowId = row.getAttribute("id");
-                                    String idx = rowId.split("_")[1];
+                        for (WebElement row : rows) {
+                            // id 값 가져오기
+                            String rowId = row.getAttribute("id");
+                            String idx = rowId.split("_")[1];
 
-                                    // typeOther 및 updateTime 데이터 가져오기
-                                    String typeOther = row.findElement(By.cssSelector("span[id$='_typeOther']")).getText();
-                                    String updateTime = row.findElement(By.cssSelector("span[id$='_updateTime']")).getText();
+                            // typeOther 및 updateTime 데이터 가져오기
+                            String typeOther = row.findElement(By.cssSelector("span[id$='_typeOther']")).getText();
+                            String updateTime = row.findElement(By.cssSelector("span[id$='_updateTime']")).getText();
 
-                                    // 지도창 호출
-                                    JavascriptExecutor js = (JavascriptExecutor) driver;
-                                    js.executeScript("apiView(" + idx + ");");
+                            // 지도창 호출
+                            JavascriptExecutor js = (JavascriptExecutor) driver;
+                            js.executeScript("apiView(" + idx + ");");
 
-                                    // 새 창 대기 및 전환
-                                    String mainWindowHandle = driver.getWindowHandle();
-                                    Set<String> windowHandles = driver.getWindowHandles();
-                                    for (String handle : windowHandles) {
-                                        if (!handle.equals(mainWindowHandle)) {
-                                            driver.switchTo().window(handle);
-                                            break;
-                                        }
-                                    }
+                            // 새 창 대기 및 전환
+                            String mainWindowHandle = driver.getWindowHandle();
+                            Set<String> windowHandles = driver.getWindowHandles();
+                            for (String handle : windowHandles) {
+                                if (!handle.equals(mainWindowHandle)) {
+                                    driver.switchTo().window(handle);
+                                    break;
+                                }
+                            }
 
-                                    // URL에서 위도와 경도 추출
-                                    String popupUrl = driver.getCurrentUrl();
-                                    double longitude = Double.parseDouble(extractQueryParam(popupUrl, "lo"));
-                                    double latitude = Double.parseDouble(extractQueryParam(popupUrl, "la"));
-                                    String addr = getAddress(longitude, latitude);
+                            // URL에서 위도와 경도 추출
+                            String popupUrl = driver.getCurrentUrl();
+                            double longitude = Double.parseDouble(extractQueryParam(popupUrl, "lo"));
+                            double latitude = Double.parseDouble(extractQueryParam(popupUrl, "la"));
+                            String addr = getAddress(longitude, latitude);
 
-                                    // 새 창 닫기 및 원래 창으로 복귀
-                                    driver.close();
-                                    driver.switchTo().window(mainWindowHandle);
+                            // 새 창 닫기 및 원래 창으로 복귀
+                            driver.close();
+                            driver.switchTo().window(mainWindowHandle);
 
-                                    // 업데이트 시간 비교 및 데이터 처리
+                            // 업데이트 시간 비교 및 데이터 처리
+                            // 업데이트 시간 비교해서 break 처리
 //                                    if (lastCrawlTime == null || updateTime.compareTo(lastCrawlTime) > 0) {
 //                                        Issue newIssue = new Issue();
 //                                        newIssue.setContent(content);
@@ -175,22 +167,7 @@ public class WebCrawlerService {
 //                                        hasNewData = true;
 //                                    }
 
-                                    System.out.println(typeOther + " " + updateTime + " (" + latitude + ", " + longitude + ")" + " " + addr);
-
-                                    break;
-
-                                } catch (Exception e) {
-                                    // 오류 발생 시 재시도
-//                                   System.out.println("데이터 처리 중 오류 발생: " + e.getMessage());
-
-                                    // 재시도 전에 대기 시간 (너무 빈번한 시도 방지)
-                                    try {
-                                        Thread.sleep(500);
-                                    } catch (InterruptedException ie) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                }
-                            }
+                            System.out.println(typeOther + " " + updateTime + " (" + latitude + ", " + longitude + ")" + " " + addr);
                         }
 
                         // 현재 페이지 번호와 최대 페이지 번호 비교
@@ -245,8 +222,10 @@ public class WebCrawlerService {
                 if (!results.isEmpty()) {
                     Map<String, Object> region = (Map<String, Object>) results.get(0).get("region");
                     String area1 = ((Map<String, Object>) region.get("area1")).get("name").toString();
+                    String area2 = ((Map<String, Object>) region.get("area2")).get("name").toString(); // 시군구
+                    String area3 = ((Map<String, Object>) region.get("area3")).get("name").toString(); // 읍면동
 
-                    return String.format("%s", area1);
+                    return String.format("%s %s %s", area1, area2, area3);
                 }
             }
         }

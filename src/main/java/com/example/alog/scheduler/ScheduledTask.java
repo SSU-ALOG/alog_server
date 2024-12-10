@@ -13,9 +13,10 @@ public class ScheduledTask {
         this.webCrawlerService = webCrawlerService;
     }
 
-    @Scheduled(fixedRate = 300000) // 5분마다 실행
-    public void runCrawler() {
-        webCrawlerService.fetchAndSaveNewData();
-        System.out.println("크롤링 작업 완료");
-    }
+//    @Scheduled(fixedRate = 3000000)
+////    @Scheduled(fixedRate = 300000) // 5분마다 실행
+//    public void runCrawler() {
+//        webCrawlerService.fetchAndSaveNewData();
+//        System.out.println("크롤링 작업 완료");
+//    }
 }

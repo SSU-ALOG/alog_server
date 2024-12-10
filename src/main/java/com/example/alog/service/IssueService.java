@@ -16,13 +16,9 @@ public class IssueService {
     @Autowired
     private final IssueRepository issueRepository;
 
-    public IssueService(IssueRepository issueRepository){
-        this.issueRepository = issueRepository;
-    }
+    public IssueService(IssueRepository issueRepository){ this.issueRepository = issueRepository; }
 
-    public Issue saveIssue(Issue issue) {
-        return issueRepository.save(issue);
-    }
+    public Issue saveIssue(Issue issue) { return issueRepository.save(issue); }
 
     public List<Issue> getIssuesWithinAWeek(){
         LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
