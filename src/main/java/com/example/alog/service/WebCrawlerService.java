@@ -22,23 +22,26 @@ import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
 public class WebCrawlerService {
 
     @Autowired
-    private IssueRepository repository;
+    private IssueService issueService;
 
     @Autowired
     private IssueMetaDataRepository metaDataRepository;
 
     private WebDriver driver;
 
-//    @Value("${naver.api.url")
     private String NAVER_API_URL = "https://naveropenapi.apigw.ntruss.com/map-reversegeocode/v2/gc";
 
     @Value("${naver.api.id}")
@@ -61,27 +64,34 @@ public class WebCrawlerService {
         try {
             // 최근 크롤링 시간 가져오기
             Optional<IssueMetaData> metadata = metaDataRepository.findById(1L);
-            String lastCrawlTime = metadata.map(meta -> String.valueOf(meta.getDatetime())).orElse(null);
+            LocalDateTime lastCrawlTime = LocalDateTime.parse(metadata.map(meta -> String.valueOf(meta.getDatetime()).replace("Z", "")).orElse(null));
+            LocalDateTime currentTime = LocalDateTime.parse(Instant.now().atZone(ZoneId.of("Asia/Seoul")).toString().replace("Z", ""), DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
-//            System.out.println("lastCrawlTime: " + lastCrawlTime);
+            System.out.println("lastCrawlTime: " + lastCrawlTime); // lastCrawlTime: 2024-12-11T18:41:43
+            System.out.println("currentTime: " + currentTime); // currentTime: 2024-12-12T00:15:07.751871700
 
             // 대상 페이지 접속
             driver.get("https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/fcl/traficInfoList.html?menuSeq=881");
 
             List<Issue> newDataList = new ArrayList<>();
-            boolean hasNewData = false;
 
-            getTrafficData(lastCrawlTime);
+            newDataList.addAll(getTrafficData(lastCrawlTime, currentTime));
+//            newDataList.addAll(getTrafficData(lastCrawlTime, currentTime));
+//            newDataList.addAll(getTrafficData(lastCrawlTime, currentTime));
+
+            System.out.println("data list: size: " + newDataList.size());
 
             // 새로운 데이터를 DB에 저장
-            if (hasNewData) {
-                repository.saveAll(newDataList);
-
-                // 최근 크롤링 시간 업데이트
-                IssueMetaData issueMetaData = metadata.orElse(new IssueMetaData());
-                issueMetaData.setDatetime(Instant.now());
-                metaDataRepository.save(issueMetaData);
-            }
+//            if (!newDataList.isEmpty()) {
+//                for (Issue newData : newDataList) {
+//                    issueService.saveIssue(newData);
+//                }
+//
+//                // 최근 크롤링 시간 업데이트
+//                IssueMetaData issueMetaData = metadata.orElse(new IssueMetaData());
+//                issueMetaData.setDatetime(Instant.now());
+//                metaDataRepository.save(issueMetaData);
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -91,10 +101,12 @@ public class WebCrawlerService {
         }
     }
 
-    private List<Issue> getTrafficData(String lastCrawlTime) {
+    // 교통정보
+    private List<Issue> getTrafficData(LocalDateTime lastCrawlTime, LocalDateTime currentTime) {
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         List<Issue> dataList = new ArrayList<>();
         WebElement apiTrElement = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
 
         // 대상 페이지 접속
         driver.get("https://www.safekorea.go.kr/idsiSFK/neo/sfk/cs/sfc/fcl/traficInfoList.html?menuSeq=881");
@@ -120,6 +132,11 @@ public class WebCrawlerService {
                         // 데이터 가져오기
                         apiTrElement = driver.findElement(By.cssSelector("#apiTr"));
                         List<WebElement> rows = apiTrElement.findElements(By.cssSelector("tr[id*='_apiData1']"));
+
+                        // 등록된 데이터가 없는 경우
+                        List<WebElement> noDataMessage = driver.findElements(By.xpath("//span[contains(text(), '등록된 데이터가 없습니다.')]"));
+                        if (!noDataMessage.isEmpty()) { rows = List.of(); }
+
                         int rowCount = rows.size();
 
                         System.out.println("rowCount: " + rowCount);
@@ -131,7 +148,15 @@ public class WebCrawlerService {
 
                             // typeOther 및 updateTime 데이터 가져오기
                             String typeOther = row.findElement(By.cssSelector("span[id$='_typeOther']")).getText();
-                            String updateTime = row.findElement(By.cssSelector("span[id$='_updateTime']")).getText();
+                            LocalDateTime updateTime = LocalDateTime.parse(row.findElement(By.cssSelector("span[id$='_updateTime']")).getText(), formatter);
+
+                            System.out.println("updateTime: " + updateTime);
+                            // 시간 비교
+                            if (updateTime.isAfter(currentTime)) {
+                                continue;
+                            } else if (updateTime.isBefore(lastCrawlTime)) {
+                                break;
+                            }
 
                             // 지도창 호출
                             JavascriptExecutor js = (JavascriptExecutor) driver;
@@ -157,17 +182,17 @@ public class WebCrawlerService {
                             driver.close();
                             driver.switchTo().window(mainWindowHandle);
 
-                            // 업데이트 시간 비교 및 데이터 처리
-                            // 업데이트 시간 비교해서 break 처리
-//                                    if (lastCrawlTime == null || updateTime.compareTo(lastCrawlTime) > 0) {
-//                                        Issue newIssue = new Issue();
-//                                        newIssue.setContent(content);
-//                                        newIssue.setUpdateTime(updateTime);
-//                                        newDataList.add(newIssue);
-//                                        hasNewData = true;
-//                                    }
+                            String title = getTitle(typeOther);
+                            BigDecimal lat = BigDecimal.valueOf(latitude);
+                            BigDecimal lon = BigDecimal.valueOf(longitude);
 
-                            System.out.println(typeOther + " " + updateTime + " (" + latitude + ", " + longitude + ")" + " " + addr);
+                            // 데이터 추가
+                            Issue newIssue = new Issue(title, "안전사고", typeOther, lat, lon, addr);
+                            newIssue.setVerified(true);
+                            dataList.add(newIssue);
+
+                            System.out.println(title + " / " + "안전사고" + " / " + typeOther + " / " + lat + " / " + lon + " / " + addr);
+//                            System.out.println(typeOther + " " + updateTime + " (" + latitude + ", " + longitude + ")" + " " + addr);
                         }
 
                         // 현재 페이지 번호와 최대 페이지 번호 비교
@@ -211,25 +236,47 @@ public class WebCrawlerService {
 
         // 요청 전송
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+        try {
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
 
-        // JSON 응답에서 주소 정보 추출
-        if (response.getStatusCode() == HttpStatus.OK) {
-            Map<String, Object> body = response.getBody();
-            if (body != null && body.containsKey("results")) {
-                List<Map<String, Object>> results = (List<Map<String, Object>>) body.get("results");
+            // JSON 응답에서 주소 정보 추출
+            if (response.getStatusCode() == HttpStatus.OK) {
+                Map<String, Object> body = response.getBody();
+                if (body != null && body.containsKey("results")) {
+                    List<Map<String, Object>> results = (List<Map<String, Object>>) body.get("results");
 
-                if (!results.isEmpty()) {
-                    Map<String, Object> region = (Map<String, Object>) results.get(0).get("region");
-                    String area1 = ((Map<String, Object>) region.get("area1")).get("name").toString();
-                    String area2 = ((Map<String, Object>) region.get("area2")).get("name").toString(); // 시군구
-                    String area3 = ((Map<String, Object>) region.get("area3")).get("name").toString(); // 읍면동
+                    if (!results.isEmpty()) {
+                        Map<String, Object> region = (Map<String, Object>) results.get(0).get("region");
+                        String area1 = ((Map<String, Object>) region.get("area1")).get("name").toString();
+                        String area2 = ((Map<String, Object>) region.get("area2")).get("name").toString(); // 시군구
+                        String area3 = ((Map<String, Object>) region.get("area3")).get("name").toString(); // 읍면동
 
-                    return String.format("%s %s %s", area1, area2, area3);
+                        return String.format("%s %s %s", area1, area2, area3);
+                    }
                 }
             }
+        } catch (Exception e) {
+            System.out.println("주소 변환 중 오류 발생: " + e.getMessage());
         }
-        throw new RuntimeException("Failed to retrieve city address from Naver Map API");
+
+        return "알 수 없음";
+    }
+
+    private String getTitle(String str) {
+        String title = str;
+
+        if (str.contains("<") && str.contains(">")) {
+            String afterAngleBrackets = str.split(">")[1].trim();
+
+            if (afterAngleBrackets.contains("-")) {
+                title = afterAngleBrackets.split("-")[0].trim();
+            } else {
+                title = afterAngleBrackets;
+            }
+        } else if (str.contains("-")) {
+            title = str.split("-")[0].trim();
+        }
+        return title;
     }
 
     // URL에서 좌표 가져오기

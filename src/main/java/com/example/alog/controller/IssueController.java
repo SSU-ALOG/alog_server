@@ -1,12 +1,10 @@
-// spring boot 에서 rest api endpoint 설정하여 android 앱에서 데이터를 전송할 수 있게 함.
-
 package com.example.alog.controller;
 
 import com.example.alog.entity.Issue;
 import com.example.alog.service.IssueService;
+import com.example.alog.service.FCMService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +17,7 @@ public class IssueController {
     private IssueService issueService;
 
     @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-
-    public IssueController(IssueService issueService){
-        this.issueService = issueService;
-    }
+    private FCMService fcmService;
 
     @PostMapping("/create")
     public ResponseEntity<?> createIssue(@RequestBody Issue issue) {
@@ -31,8 +25,12 @@ public class IssueController {
             return ResponseEntity.badRequest().body("Address (addr) cannot be null or empty");
         }
 
+        // Issue 저장
         Issue savedIssue = issueService.saveIssue(issue);
-        messagingTemplate.convertAndSend("/topic/newData", issue);
+
+        // 사용자에게 Issue 데이터를 포함한 FCM 알림 전송
+        fcmService.sendNotificationWithData(savedIssue);
+
         return ResponseEntity.ok(savedIssue);
     }
 
