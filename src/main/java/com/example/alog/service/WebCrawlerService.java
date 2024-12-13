@@ -60,11 +60,11 @@ public class WebCrawlerService {
         this.driver = new ChromeDriver(options);
     }
 
-    public void fetchAndSaveNewData() {
+    public void fetchAndSaveNewData(Optional<IssueMetaData> metaData) {
         try {
             // 최근 크롤링 시간 가져오기
-            Optional<IssueMetaData> metadata = metaDataRepository.findById(1L);
-            LocalDateTime lastCrawlTime = LocalDateTime.parse(metadata.map(meta -> String.valueOf(meta.getDatetime()).replace("Z", "")).orElse(null));
+//            Optional<IssueMetaData> metaData = metaDataRepository.findById(1L);
+            LocalDateTime lastCrawlTime = LocalDateTime.parse(metaData.map(meta -> String.valueOf(meta.getDatetime()).replace("Z", "")).orElse(null));
             LocalDateTime currentTime = LocalDateTime.parse(Instant.now().atZone(ZoneId.of("Asia/Seoul")).toString().replace("Z", ""), DateTimeFormatter.ISO_ZONED_DATE_TIME);
 
             System.out.println("lastCrawlTime: " + lastCrawlTime); // lastCrawlTime: 2024-12-11T18:41:43
@@ -134,13 +134,15 @@ public class WebCrawlerService {
                         List<WebElement> rows = apiTrElement.findElements(By.cssSelector("tr[id*='_apiData1']"));
 
                         // 등록된 데이터가 없는 경우
-                        List<WebElement> noDataMessage = driver.findElements(By.xpath("//span[contains(text(), '등록된 데이터가 없습니다.')]"));
-                        if (!noDataMessage.isEmpty()) { rows = List.of(); }
+                        // 근데 뭔가 이상함!! 확인해봐야 할 것 같음
+//                        List<WebElement> noDataMessage = driver.findElements(By.xpath("//span[contains(text(), '등록된 데이터가 없습니다.')]"));
+//                        if (!noDataMessage.isEmpty()) { break; }
 
                         int rowCount = rows.size();
 
                         System.out.println("rowCount: " + rowCount);
 
+                        boolean chk = false;
                         for (WebElement row : rows) {
                             // id 값 가져오기
                             String rowId = row.getAttribute("id");
@@ -155,6 +157,7 @@ public class WebCrawlerService {
                             if (updateTime.isAfter(currentTime)) {
                                 continue;
                             } else if (updateTime.isBefore(lastCrawlTime)) {
+                                chk = true;
                                 break;
                             }
 
@@ -199,7 +202,7 @@ public class WebCrawlerService {
                         int minPage = Integer.parseInt(driver.findElement(By.id("minPage")).getText().trim());
                         int maxPage = Integer.parseInt(driver.findElement(By.id("maxPage")).getText().trim());
 
-                        if (minPage >= maxPage) {
+                        if (chk || minPage >= maxPage) {
                             break; // 마지막 페이지인 경우 종료
                         } else {
                             // 다음 페이지로 이동
@@ -276,7 +279,7 @@ public class WebCrawlerService {
         } else if (str.contains("-")) {
             title = str.split("-")[0].trim();
         }
-        return title;
+        return "[교통]" + title;
     }
 
     // URL에서 좌표 가져오기

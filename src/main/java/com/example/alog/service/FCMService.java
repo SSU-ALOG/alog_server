@@ -1,8 +1,7 @@
 package com.example.alog.service;
 
 import com.example.alog.entity.Issue;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.Message;
+import com.google.firebase.messaging.*;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -28,6 +27,17 @@ public class FCMService {
                     .putData("verified", String.valueOf(issue.getVerified()))
                     .putData("addr", issue.getAddr())
                     .setTopic("alog-all") // 모든 사용자에게 전송
+                    .setNotification(Notification.builder()
+                            .setTitle("[" + issue.getAddr() + "] " + issue.getCategory() + " 알림! 📢")
+                            .setBody(issue.getTitle())
+                            .build())
+                    .setAndroidConfig(AndroidConfig.builder()
+                            .setPriority(AndroidConfig.Priority.HIGH)
+                            .setNotification(AndroidNotification.builder()
+                                    .setChannelId("high_importance_channel")
+                                    .setClickAction("FLUTTER_NOTIFICATION_CLICK")
+                                    .build())
+                            .build())
                     .build();
 
             // 메시지 전송
