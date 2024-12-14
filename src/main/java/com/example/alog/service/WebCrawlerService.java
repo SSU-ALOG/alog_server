@@ -17,12 +17,17 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -51,7 +56,17 @@ public class WebCrawlerService {
     private String CLIENT_SECRET;
 
     public WebCrawlerService() throws IOException {
-        String chromeDriverPath = new ClassPathResource("chromedriver-win64/chromedriver.exe").getFile().getAbsolutePath();
+//        String chromeDriverPath = new ClassPathResource("chromedriver-linux64/chromedriver.exe").getFile().getAbsolutePath();
+
+        Resource resource = new ClassPathResource("chromedriver-linux64/chromedriver");
+        File tempFile = File.createTempFile("chromedriver", "");
+        try (InputStream is = resource.getInputStream()) {
+            Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            tempFile.setExecutable(true); // 실행 권한 추가
+        }
+        String chromeDriverPath = tempFile.getAbsolutePath();
+
+
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 
         ChromeOptions options = new ChromeOptions();
@@ -306,7 +321,17 @@ public class WebCrawlerService {
         List<String> data = new ArrayList<>();
 
         // ChromeDriver 경로 설정
-        String chromeDriverPath = new ClassPathResource("chromedriver-win64/chromedriver.exe").getFile().getAbsolutePath();
+//        String chromeDriverPath = new ClassPathResource("chromedriver-linux64/chromedriver.exe").getFile().getAbsolutePath();
+
+        Resource resource = new ClassPathResource("chromedriver-linux64/chromedriver");
+        File tempFile = File.createTempFile("chromedriver", "");
+        try (InputStream is = resource.getInputStream()) {
+            Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            tempFile.setExecutable(true); // 실행 권한 추가
+        }
+        String chromeDriverPath = tempFile.getAbsolutePath();
+
+
         System.setProperty("webdriver.chrome.driver", chromeDriverPath);
 
         // Chrome 옵션 설정
