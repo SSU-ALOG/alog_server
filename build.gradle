@@ -34,6 +34,10 @@ dependencies {
 
     // FCM
     implementation 'com.google.firebase:firebase-admin:9.1.1'
+
+    // short video
+    compileOnly 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
 }
 
 tasks.named('test') {
