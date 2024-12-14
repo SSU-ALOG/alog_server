@@ -1,5 +1,6 @@
 package com.example.alog.service;
 
+import com.example.alog.entity.Issue;
 import com.example.alog.entity.IssueMetaData;
 import com.example.alog.entity.Message;
 import com.example.alog.repository.IssueMetaDataRepository;
@@ -31,6 +32,22 @@ public class MessageService {
 
     public MessageService(MessageRepository messageRepository) {
         this.messageRepository = messageRepository;
+    }
+
+    public List<Message> getMessagesWithinAWeek() {
+        LocalDateTime oneWeekAgo = LocalDateTime.now().minusWeeks(1);
+        List<Message> messages = messageRepository.findMessagesWithinAWeek(oneWeekAgo);
+
+        if (messages.isEmpty()) {
+            System.out.println("No messages found within the last week.");
+        } else {
+            System.out.println("Message within a week: " + messages);
+            messages.forEach(message ->
+                System.out.println("Message ID: " + message.getMsgSn() + ", Content: " + message.getMsgCn())
+            );
+        }
+
+        return messages;
     }
 
     // 데이터 처리 및 DB 저장
@@ -71,9 +88,9 @@ public class MessageService {
             }
 
             // DB에 저장
-//            if (!messages.isEmpty()) {
-//                messageRepository.saveAll(messages);
-//            }
+            if (!messages.isEmpty()) {
+                messageRepository.saveAll(messages);
+            }
         }
     }
 

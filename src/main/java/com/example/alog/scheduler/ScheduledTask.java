@@ -30,6 +30,6 @@ public class ScheduledTask {
         Optional<IssueMetaData> metaData = metaDataRepository.findById(1L);
 //        webCrawlerService.fetchAndSaveNewData(metaData);
 //        System.out.println("크롤링 작업 완료");
-        messageService.saveMessages(metaData);
+//        messageService.saveMessages(metaData);
     }
 }
