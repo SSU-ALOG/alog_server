@@ -4,10 +4,16 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 
 import javax.annotation.PostConstruct;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 
 @Configuration
 public class FCMConfig {
@@ -15,7 +21,12 @@ public class FCMConfig {
     @PostConstruct
     public void initialize() {
         try {
+            // 로컬용 (window)
             FileInputStream serviceAccount = new FileInputStream("src/main/resources/firebase/firebase-adminsdk.json");
+
+            // 서버 배포용 (linux)
+//            Resource resource = new ClassPathResource("firebase/firebase-adminsdk.json");
+//            InputStream serviceAccount = resource.getInputStream();
 
             FirebaseOptions options = FirebaseOptions.builder()
                     .setCredentials(GoogleCredentials.fromStream(serviceAccount))

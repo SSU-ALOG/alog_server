@@ -60,7 +60,7 @@ public class WebCrawlerService {
         String chromeDriverPath = new ClassPathResource("chromedriver-win64/chromedriver.exe").getFile().getAbsolutePath();
 
         // 서버 배포용 (linux)
-//        Resource resource = new ClassPathResource("chromedriver-win64/chromedriver");
+//        Resource resource = new ClassPathResource("chromedriver-linux64/chromedriver");
 //        File tempFile = File.createTempFile("chromedriver", "");
 //        try (InputStream is = resource.getInputStream()) {
 //            Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
@@ -320,27 +320,6 @@ public class WebCrawlerService {
 
     public List<String> fetchTableData() throws IOException {
         List<String> data = new ArrayList<>();
-
-//        // ChromeDriver 경로 설정
-        String chromeDriverPath = new ClassPathResource("chromedriver-win64/chromedriver.exe").getFile().getAbsolutePath();
-////        Resource resource = new ClassPathResource("chromedriver-linux64/chromedriver");
-//        File tempFile = File.createTempFile("chromedriver", "");
-//        try (InputStream is = resource.getInputStream()) {
-//            Files.copy(is, tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-//            tempFile.setExecutable(true); // 실행 권한 추가
-//        }
-//        String chromeDriverPath = tempFile.getAbsolutePath();
-
-        System.setProperty("webdriver.chrome.driver", chromeDriverPath);
-
-        // Chrome 옵션 설정
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless"); // 브라우저 창을 열지 않음
-        options.addArguments("--disable-gpu");
-        options.addArguments("--no-sandbox");
-
-        // WebDriver 생성
-        WebDriver driver = new ChromeDriver(options);
 
         try {
             // 대상 URL 접속
