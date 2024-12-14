@@ -28,8 +28,8 @@ public class ScheduledTask {
 //    @Scheduled(fixedRate = 300000) // 5분마다 실행
     public void runCrawler() throws Exception {
         Optional<IssueMetaData> metaData = metaDataRepository.findById(1L);
-//        webCrawlerService.fetchAndSaveNewData(metaData);
-//        System.out.println("크롤링 작업 완료");
-//        messageService.saveMessages(metaData);
+        webCrawlerService.fetchAndSaveNewData(metaData);
+        System.out.println("크롤링 작업 완료");
+        messageService.saveMessages(metaData);
     }
 }
